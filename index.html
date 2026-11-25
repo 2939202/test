@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>다담 가을 사진 공모전 현장 투표</title>
+<style>
+  :root {
+    --bg-dark: #0e0e10;
+    --bg-panel: #161619;
+    --bg-paper: #f7f6f2;
+    --ink: #141413;
+    --ink-muted: rgba(20, 20, 19, 0.55);
+    --line-dark: rgba(255, 255, 255, 0.12);
+    --line-light: rgba(20, 20, 19, 0.1);
+    --accent: #b45309;
+    --forest: #1e3a2f;
+    --danger: #b91c1c;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input, a {
+    font-family: inherit;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .sp-top {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+
+  .sp-bottom {
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  /* ================= 1. 시작 화면 (#intro) ================= */
+  #intro {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: var(--bg-dark);
+    color: #ffffff;
+    overflow-y: auto;
+  }
+
+  .intro-wrap {
+    min-height: 100dvh;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .intro-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    padding-top: 4px;
+  }
+
+  .intro-brand {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .intro-nav {
+    display: flex;
+    gap: 20px;
+  }
+
+  .intro-nav button {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 2px;
+  }
+
+  .intro-nav button:hover {
+    color: #ffffff;
+  }
+
+  .intro-main {
+    margin: auto 0;
+    padding: 48px 0 24px;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .intro-kicker {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+  }
+
+  .intro-title {
+    margin: 10px 0 0;
+    font-size: 40px;
+    line-height: 1.12;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .intro-rules {
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .intro-rules li + li {
+    margin-top: 6px;
+  }
+
+  .intro-form {
+    margin-top: 34px;
+  }
+
+  .intro-input {
+    width: 100%;
+    padding: 14px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 0;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    outline: none;
+  }
+
+  .intro-input::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+  }
+
+  .intro-input:focus {
+    border-bottom-color: #ffffff;
+  }
+
+  .intro-note {
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .intro-submit {
+    margin-top: 24px;
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    color: #111111;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .intro-footer {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  /* ================= 2. 풀스크린 스와이프 뷰어 (#viewer) ================= */
+  #viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: var(--bg-dark);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .viewer-top {
+    flex-shrink: 0;
+    background: rgba(14, 14, 16, 0.94);
+    border-bottom: 1px solid var(--line-dark);
+    z-index: 10;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 1.8%;
+    background: #ffffff;
+    transition: width 0.2s ease-out;
+  }
+
+  .viewer-bar {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 10px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  .viewer-bar-left {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 500;
+    padding: 4px 8px 4px 0;
+  }
+
+  .viewer-ai-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .viewer-ai-badge.is-ai {
+    color: #f59e0b;
+  }
+
+  .viewer-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .viewer-bar-right button {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 2px;
+  }
+
+  .viewer-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background: var(--bg-dark);
+  }
+
+  #track {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  #track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+  }
+
+  .slide img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+  }
+
+  .slide.is-mine img {
+    opacity: 0.35;
+    filter: grayscale(100%);
+  }
+
+  .slide-lock {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 6px 10px;
+    background: rgba(185, 28, 28, 0.92);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .slide-broken {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+  }
+
+  .slide-broken a {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 10px 18px;
+    background: #ffffff;
+    color: #111111;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .nav-arrow {
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(14, 14, 16, 0.75);
+    border: 1px solid var(--line-dark);
+    color: #ffffff;
+    font-size: 22px;
+  }
+
+  @media (min-width: 768px) {
+    .nav-arrow {
+      display: flex;
+    }
+    #vPrev { left: 20px; }
+    #vNext { right: 20px; }
+  }
+
+  .viewer-bottom {
+    flex-shrink: 0;
+    background: rgba(14, 14, 16, 0.96);
+    border-top: 1px solid var(--line-dark);
+    padding: 14px 16px 0;
+    z-index: 10;
+  }
+
+  .viewer-bottom-inner {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .seg-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .seg-item {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.16);
+    transition: background-color 0.2s ease;
+  }
+
+  .seg-item.filled {
+    background: #d97706;
+  }
+
+  .seg-item.voted {
+    background: #16a34a;
+  }
+
+  .viewer-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  #vPick {
+    flex: 1;
+    padding: 14px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    background: transparent;
+  }
+
+  #vPick.state-on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  #vPick.state-self {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  #vPick.state-mine {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: #ffffff;
+  }
+
+  #vPick.state-closed {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  #vSubmit {
+    padding: 14px 26px;
+    background: #ffffff;
+    color: #111111;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  #vSubmit:disabled {
+    opacity: 0.25;
+  }
+
+  /* ================= 3. 전체 보기 그리드 (#gridView) ================= */
+  #gridView {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: var(--bg-paper);
+    color: var(--ink);
+    overflow-y: auto;
+  }
+
+  .grid-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(247, 246, 242, 0.96);
+    border-bottom: 1px solid var(--line-light);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .grid-header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .grid-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .grid-top-row h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .grid-top-row button {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 4px;
+  }
+
+  .grid-filters {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+  }
+
+  .filter-btn {
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+
+  .filter-btn.active {
+    color: var(--ink);
+    font-weight: 700;
+    border-bottom-color: var(--ink);
+  }
+
+  .grid-body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 14px 12px 64px;
+  }
+
+  #gridList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  @media (min-width: 640px) {
+    #gridList { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (min-width: 900px) {
+    #gridList { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  .grid-tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: rgba(20, 20, 19, 0.06);
+    overflow: hidden;
+    display: block;
+    width: 100%;
+  }
+
+  .grid-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .tile-ai {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .tile-mark {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .tile-mark.self { background: #111111; }
+  .tile-mark.sel { background: var(--accent); }
+  .tile-mark.mine { background: var(--forest); }
+
+  .tile-ring {
+    position: absolute;
+    inset: 0;
+    border: 3px solid var(--accent);
+    pointer-events: none;
+  }
+
+  .tile-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(247, 246, 242, 0.65);
+    pointer-events: none;
+  }
+
+  #gridEmpty {
+    text-align: center;
+    padding: 80px 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  /* ================= 4. 실시간 현황 & 관리자 (#pages) ================= */
+  #pages {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: var(--bg-paper);
+    color: var(--ink);
+    overflow-y: auto;
+  }
+
+  .pages-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(247, 246, 242, 0.96);
+    border-bottom: 1px solid var(--line-light);
+  }
+
+  .pages-header-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .pages-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .pages-top span {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .pages-top button {
+    font-size: 13px;
+    color: var(--ink-muted);
+    padding: 6px 2px;
+  }
+
+  .pages-tabs {
+    display: flex;
+    gap: 24px;
+  }
+
+  .tab-btn {
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  .pages-main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line-light);
+    border-bottom: 1px solid var(--line-light);
+  }
+
+  .stat-cell {
+    padding: 16px 12px;
+  }
+
+  .stat-cell + .stat-cell {
+    border-left: 1px solid var(--line-light);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  .stat-val {
+    margin-top: 6px;
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-muted);
+    margin-left: 2px;
+  }
+
+  .top-sections {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-top: 32px;
+  }
+
+  @media (min-width: 720px) {
+    .top-sections { grid-template-columns: 1fr 1fr; }
+  }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line-light);
+  }
+
+  .sec-head h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .sec-head span {
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  .rank-row {
+    width: 100%;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(20, 20, 19, 0.06);
+  }
+
+  .rank-pos {
+    width: 28px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .rank-pos.top3 {
+    color: var(--accent);
+  }
+
+  .rank-thumb {
+    width: 44px;
+    height: 44px;
+    background: rgba(20, 20, 19, 0.06);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .rank-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .rank-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rank-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .rank-bar-bg {
+    height: 4px;
+    background: rgba(20, 20, 19, 0.08);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .rank-bar-fill {
+    height: 100%;
+    background: var(--forest);
+    transition: width 0.3s ease;
+  }
+
+  .rank-bar-fill.is-ai {
+    background: var(--accent);
+  }
+
+  /* 관리자 영역 */
+  .admin-login-box {
+    max-width: 380px;
+  }
+
+  .admin-login-box h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .admin-login-box p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .admin-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .admin-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    background: #ffffff;
+    border: 1px solid var(--line-light);
+    font-size: 14px;
+    outline: none;
+  }
+
+  .admin-form button {
+    padding: 11px 20px;
+    background: var(--ink);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .admin-btns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .admin-btns { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .admin-btns button {
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  #revealBtn { background: var(--ink); color: #ffffff; }
+  #csvBtn { background: var(--forest); color: #ffffff; }
+  #resetBtn { background: #ffffff; border: 1px solid var(--line-light); color: var(--danger); }
+
+  .admin-table-wrap {
+    margin-top: 28px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  th {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line-light);
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(20, 20, 19, 0.06);
+    white-space: nowrap;
+  }
+
+  /* ================= 5. 라이트박스 & 다이얼로그 & 토스트 ================= */
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--bg-dark);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lb-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-dark);
+    font-size: 13px;
+  }
+
+  .lb-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .lb-stage img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .lb-bottom {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px 0;
+    border-top: 1px solid var(--line-dark);
+    font-size: 13px;
+  }
+
+  #dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .dlg-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--bg-paper);
+    color: var(--ink);
+    padding: 24px;
+    border: 1px solid var(--line-light);
+  }
+
+  .dlg-card h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .dlg-card p {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(20, 20, 19, 0.8);
+  }
+
+  .dlg-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
+  }
+
+  #dlgCancel {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  #dlgOk {
+    padding: 10px 18px;
+    background: var(--ink);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 104px;
+    transform: translateX(-50%);
+    z-index: 70;
+    max-width: 90vw;
+    padding: 10px 16px;
+    background: var(--bg-paper);
+    color: var(--ink);
+    border: 1px solid var(--line-light);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 1. 시작 화면 (단색 타이포그래피) ================= -->
+<section id="intro">
+  <div class="intro-wrap sp-top sp-bottom">
+    <header class="intro-header">
+      <span class="intro-brand">다담 사진 동아리</span>
+      <nav class="intro-nav">
+        <button id="introLive" type="button">실시간 현황</button>
+        <button id="introAdmin" type="button">관리자</button>
+      </nav>
+    </header>
+
+    <div class="intro-main">
+      <p class="intro-kicker">2026 현장 투표</p>
+      <h1 class="intro-title">다담 가을<br/>사진 공모전</h1>
+
+      <ul class="intro-rules">
+        <li>· 본인 출품작을 제외한 작품 3점을 선택합니다.</li>
+        <li>· 이름을 입력하면 본인 출품작은 자동으로 잠금 처리됩니다.</li>
+        <li>· 모든 심사는 익명으로 진행되며 제출 후 수정할 수 없습니다.</li>
+      </ul>
+
+      <form id="nameForm" class="intro-form">
+        <input
+          id="nameInput"
+          class="intro-input"
+          type="text"
+          autocomplete="off"
+          maxlength="20"
+          placeholder="이름을 입력하세요"
+        />
+        <p id="nameNote" class="intro-note hidden"></p>
+        <button id="nameBtn" type="submit" class="intro-submit">시작하기</button>
+      </form>
+    </div>
+
+    <footer class="intro-footer">
+      공정한 블라인드 심사를 위해 투표 시작 전에는 어떠한 출품작도 노출되지 않습니다.
+    </footer>
+  </div>
+</section>
+
+<!-- ================= 2. 풀스크린 스와이프 투표 뷰어 ================= -->
+<section id="viewer" class="hidden">
+  <header class="viewer-top sp-top">
+    <div class="progress-track">
+      <div id="vProgress" class="progress-fill"></div>
+    </div>
+    <div class="viewer-bar">
+      <button id="vHome" type="button" class="viewer-bar-left">처음으로</button>
+      <span id="vAi" class="viewer-ai-badge">AI 미활용</span>
+      <div class="viewer-bar-right">
+        <button id="vGrid" type="button">전체 보기</button>
+        <button id="vLive" type="button" style="color: rgba(255,255,255,0.65);">현황</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="viewer-stage">
+    <div id="track"></div>
+    <button id="vPrev" type="button" class="nav-arrow" aria-label="이전 작품">&#8249;</button>
+    <button id="vNext" type="button" class="nav-arrow" aria-label="다음 작품">&#8250;</button>
+  </div>
+
+  <footer class="viewer-bottom sp-bottom">
+    <div class="viewer-bottom-inner">
+      <div id="vSelSegs" class="seg-bar" aria-label="선택 진행 상태">
+        <span class="seg-item"></span>
+        <span class="seg-item"></span>
+        <span class="seg-item"></span>
+      </div>
+      <div class="viewer-actions">
+        <button id="vPick" type="button">이 작품 선택</button>
+        <button id="vSubmit" type="button" disabled>제출</button>
+      </div>
+    </div>
+  </footer>
+</section>
+
+<!-- ================= 3. 전체 보기 오버레이 ================= -->
+<section id="gridView" class="hidden">
+  <div class="grid-header sp-top">
+    <div class="grid-header-inner">
+      <div class="grid-top-row">
+        <h2>전체 출품작</h2>
+        <button id="gridClose" type="button">닫기</button>
+      </div>
+      <div class="grid-filters">
+        <button type="button" data-filter="ALL" class="filter-btn active">전체</button>
+        <button type="button" data-filter="NOAI" class="filter-btn">AI 미활용</button>
+        <button type="button" data-filter="AI" class="filter-btn">AI 활용함</button>
+        <button type="button" data-filter="SEL" class="filter-btn">선택한 작품</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-body">
+    <div id="gridList"></div>
+    <p id="gridEmpty" class="hidden">해당 조건의 작품이 없습니다.</p>
+  </div>
+</section>
+
+<!-- ================= 4. 실시간 현황 & 관리자 ================= -->
+<section id="pages" class="hidden">
+  <header class="pages-header sp-top">
+    <div class="pages-header-inner">
+      <div class="pages-top">
+        <span>다담 가을 사진 공모전</span>
+        <button id="pagesBack" type="button">투표로 돌아가기</button>
+      </div>
+      <nav class="pages-tabs">
+        <button type="button" data-tab="live" class="tab-btn active">실시간 현황</button>
+        <button type="button" data-tab="admin" class="tab-btn">관리자</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pages-main">
+    <!-- 실시간 현황 -->
+    <section id="pane-live">
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-label">참여 인원</div>
+          <div class="stat-val"><span id="statVoters">0</span><span class="stat-unit">명</span></div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">총 득표</div>
+          <div class="stat-val"><span id="statVotes">0</span><span class="stat-unit">표</span></div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">출품작 수</div>
+          <div class="stat-val"><span id="statWorks">56</span><span class="stat-unit">점</span></div>
+        </div>
+      </div>
+
+      <div class="top-sections">
+        <div>
+          <div class="sec-head">
+            <h2>AI 미활용 부문 TOP 3</h2>
+            <span>일반 촬영</span>
+          </div>
+          <div id="topNoAi"></div>
+        </div>
+
+        <div>
+          <div class="sec-head">
+            <h2>AI 활용 부문 TOP 3</h2>
+            <span style="color: var(--accent);">AI 생성·보정</span>
+          </div>
+          <div id="topAi"></div>
+        </div>
+      </div>
+
+      <div style="margin-top: 36px;">
+        <div class="sec-head">
+          <h2>전체 득표 순위</h2>
+          <span>항목 선택 시 원본 확대</span>
+        </div>
+        <div id="rankAll"></div>
+      </div>
+    </section>
+
+    <!-- 관리자 -->
+    <section id="pane-admin" class="hidden">
+      <div id="adminLogin" class="admin-login-box">
+        <h2>관리자 인증</h2>
+        <p>집계 관리 및 출품자 실명 열람을 위해 비밀번호를 입력하세요.</p>
+        <form id="adminForm" class="admin-form">
+          <input id="adminPw" type="password" autocomplete="off" placeholder="비밀번호" />
+          <button type="submit">인증</button>
+        </form>
+      </div>
+
+      <div id="adminPanel" class="hidden">
+        <div class="sec-head">
+          <h2>운영 및 데이터 관리</h2>
+          <span style="color: var(--forest); font-weight: 600;">로컬 저장소 동기 작동 중</span>
+        </div>
+
+        <div class="admin-btns">
+          <button id="revealBtn" type="button">출품자 실명 · 학번 공개</button>
+          <button id="csvBtn" type="button">전체 결과 CSV 다운로드</button>
+          <button id="resetBtn" type="button">투표 데이터 초기화</button>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <button id="logoutBtn" type="button" style="font-size: 12px; color: var(--ink-muted); text-decoration: underline;">
+            관리자 모드 잠금
+          </button>
+        </div>
+
+        <div id="revealBox" class="admin-table-wrap hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>출품자</th>
+                <th>학번</th>
+                <th>구분</th>
+                <th style="text-align: right;">득표</th>
+              </tr>
+            </thead>
+            <tbody id="revealBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- ================= 원본 확대 라이트박스 ================= -->
+<div id="lightbox" class="hidden">
+  <div class="lb-top sp-top">
+    <div>
+      <strong id="lbNo">No. 01</strong>
+      <span style="opacity: 0.35; margin: 0 8px;">|</span>
+      <span id="lbAi">AI 미활용</span>
+      <span id="lbAuthor" class="hidden" style="color: #f59e0b; margin-left: 8px;"></span>
+    </div>
+    <button id="lbClose" type="button" style="font-weight: 700; padding: 4px 6px;">닫기</button>
+  </div>
+
+  <div class="lb-stage">
+    <img id="lbImg" alt="" referrerpolicy="no-referrer" />
+    <div id="lbBroken" class="slide-broken hidden">
+      <p>미리보기 이미지를 불러오지 못했습니다.</p>
+      <a id="lbDrive" target="_blank" rel="noopener noreferrer">드라이브 원본 열기</a>
+    </div>
+  </div>
+
+  <div class="lb-bottom sp-bottom">
+    <button id="lbPrev" type="button" style="padding: 8px 12px 8px 0;">&#8592; 이전 작품</button>
+    <button id="lbNext" type="button" style="padding: 8px 0 8px 12px;">다음 작품 &#8594;</button>
+  </div>
+</div>
+
+<!-- ================= 알림/확인 다이얼로그 ================= -->
+<div id="dialog" class="hidden">
+  <div class="dlg-card">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgMsg"></p>
+    <div class="dlg-btns">
+      <button id="dlgCancel" type="button" class="hidden">취소</button>
+      <button id="dlgOk" type="button">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 토스트 메시지 ================= -->
+<div id="toast" class="hidden"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
+
+  const ADMIN_PASSWORD = 'dadam2026';
+  const MAX_VOTES = 3;
+  const LOCAL_KEY = 'dadam_autumn_votes_2026_v6';
+  const SESSION_KEY = 'dadam_autumn_session_2026_v6';
+
+  /* =====================================================================
+   * 전체 56개 출품작 데이터 (#01 ~ #56)
+   * ===================================================================== */
+  const W = (studentId, author, ai, src) => ({ studentId, author, ai, src });
+
+  const RAW = [
+    W('202303003', '김규린', 0, '1eN2VKofOF4Y_SYHhTivTUYu5N5uIp5Ug'),
+    W('202303003', '김규린', 0, '1o4K0mbohnDUPtA9xDo8udwL6RZqKbUcO'),
+    W('202303003', '김규린', 0, '1iLZv73W4nwplNzsfP60GvrEVAf4Jrufa'),
+    W('202305015', '김하진', 0, '1fuhHaphDEkA8vNxxlKgDEK6wB8MMYTi-'),
+    W('202305015', '김하진', 0, '16KmNRgcfzLjk6mzDvwgDv1zDW_RvGr38'),
+    W('20231050',  '황미숙', 0, '1hsQ9lRRN7saL0UZg2mwKRz2hpt_GH95W'),
+    W('20231050',  '황미숙', 0, '1M1HkLwygbzT_Nd-jBH2cN97D_gLWg8dH'),
+    W('20231050',  '황미숙', 0, '1yztRKUMq2wTghMm854yrOaS7GjaRrcJx'),
+    W('202403010', '김정민', 0, '1e-NRWR7b3yUnb2BgxJ89aeF0uIbyc2il'),
+    W('202403012', '김혜린', 0, '16t_0ouXaLGQ8DTm7CJOVf1W4keK7xiP9'),
+    W('202403012', '김혜린', 0, '1dBDaxJXKlwu73USr-obO7TBVIlYFQqCO'),
+    W('202404013', '송준서', 0, '1legz1bzR4-uffHN0i6j4ipRteUqeuJO5'),
+    W('202405032', '이주현', 0, '1jHLatyDg3fhw2IO6vz64YWgZVK2Z0F3r'),
+    W('202405032', '이주현', 0, '1D9czlDHTb__NhTS2722nkugFtUfIfsId'),
+    W('202405032', '이주현', 0, '1PHjlK3yS1OQQDhoPvMYwaky7qVW25FIz'),
+    W('202505007', '김수진', 0, '10Aa_l-sEugnM6gf60yuCzm4hOK9mCWAS'),
+    W('202505032', '이새빈', 0, '1g-23xIiv5j5kapC0iYu4R_6_5_nFNN3m'),
+    W('202505032', '이새빈', 0, '1knVN-y6_J81VFC4oVkyWIr71_G-pUbcL'),
+    W('202505032', '이새빈', 0, '1z5PgbLLH5S7XzZjFaaudo_Kdxkjxj75J'),
+    W('202601014', '김하음', 0, '1V2AVNIATCWMZdh76l0m41m2Jc-TFi4dl'),
+    W('202601014', '김하음', 0, '1fXxA0tHJetK62lrNLTCoRmdjlGsgL1-a'),
+    W('202601014', '김하음', 0, '1TOZ75BeLhCN0vORH5q_qZDJ9xN9jdRJB'),
+    W('202601027', '윤희우', 0, '12_sr9dZGe8yUjJSTYnJiLRD1M965hTUc'),
+    W('202601027', '윤희우', 0, '17bZrm08SREjLL57ESixsKgE8OosCky6u'),
+    W('202601027', '윤희우', 0, '1E7YKzzyO-mCYpNAH7JzIV7bpwDWWaYae'),
+    W('202602011', '맹소연', 0, '1xKj6TTWsCPbAC_Lusx69daoFj2oXdPWd'),
+    W('202602011', '맹소연', 0, '1joW2YUbiZg10hAfSd_leTa94P-ouVW5L'),
+    W('202602039', '한승연', 0, '1UYPE8lcVA7rvJThkxg3DnIbkDrE61Fo8'),
+    W('202602039', '한승연', 0, '1f8aRgEIp6XpzCjkcN3ihRyJLuB_Gj0kg'),
+    W('202602039', '한승연', 0, '1XnXFO4Gv6TCNJw2flNwbdw_1FrS7pycu'),
+    W('202603002', '권주희', 0, '1N39nV97vXklKUKFLoaarmYsz_jd7AiBI'),
+    W('202603002', '권주희', 0, '1pKex_aI8o-YhmXgLNpXivXP-fJKjlqbh'),
+    W('202603002', '권주희', 0, '1LJ6pbvvSSsL5XgD__i7tfsxjx8CQp2G7'),
+    W('202603003', '권채란', 0, '1OJNS1R12Ho8OE7U1FLg48apaoB4fzmZY'),
+    W('202605004', '김내권', 0, '1na9va5FRQ3TSG-wCxb6D6LKzc0MQmUT1'),
+    W('202605004', '김내권', 0, '1hf5c6aqOy1jFd1QMvEbquKPPirel4JU_'),
+    W('202605004', '김내권', 0, '1MWSFyrB6yuwiqTxc-43DILR8BqQmYlZK'),
+    W('202605011', '김태규', 0, '1yPnuy2aEHkmRcXRjjtvJEjOj7RVD7qJj'),
+    W('202605011', '김태규', 0, '1aJv0Je6_HfsnS4wLwu5PuVQws_KCg5mW'),
+    W('202605011', '김태규', 0, '1PLklH_BD0FTnryDJHMah_8bvf5nJ6Tz1'),
+    W('202606001', '강영록', 0, '1IdLBrDFTW5smht_x878A7VvEhn6qFDwp'),
+    W('202606001', '강영록', 0, '1xGxSQbsZaEzpMumkLcB_fxNl2tsbYDVW'),
+    W('202606001', '강영록', 0, '1zCsUcC58WeNHIJ8fJBAxStf3lLdvlbpj'),
+    W('20260601',  '김상우', 0, '1LWQavUOjzoCY97wUFymLSL5C-SQy6RNq'),
+    W('20260601',  '김상우', 0, '1G7uiL6NF8r1F4r87HIfRfxeNO7HHq4u6'),
+    W('20260601',  '김상우', 0, '1z4jtkqQXz93eDdgXojtIXSPs2Z4ICHJG'),
+    W('202606012', '김성현', 0, '1ESfNBY4KKZP50dXbt7spDgLnWn5HCOB_'),
+    W('202606034', '오정주', 0, '1fJb1GbqgrutVbOS-O5pJEUe2Xb88EUg2'),
+    W('202606034', '오정주', 0, '1dFYEcEBc5qE_bVwKv5QA2i9U3RVF0axK'),
+    W('202606034', '오정주', 0, '13Z1D2pxImfLuLmwOGi3b67y2RitWHUva'),
+    W('202606041', '이수연', 0, '1jG0ENtJy8uj39o8k2OfH6_sQwKrSrqVI'),
+    W('202606041', '이수연', 1, '1IwD3Zvf9qhN4GLu3obDpHvw1aalLoLSJ'),
+    W('202606055', '하헌웅', 0, '18STnz-1NvWOcmjDhOwkJRAr3snG_YinP'),
+    W('미기재',    '오찬영', 0, '1YdbuVvafeIxVt8qRdFxkDrnayDByp2AE'),
+    W('202606006', '김국현', 0, '1eWc6HkqgB5mKKMdWkxHxXnIsxL6DXauE'),
+    W('202606006', '김국현', 0, '1Fz_29YpjciqcpvBlE7GqCMhnBhudyt-N')
+  ];
+
+  const WORKS = RAW.map((r, i) => {
+    const no = String(i + 1).padStart(2, '0');
+    const d = r.src;
+    return {
+      id: 'w' + no,
+      no,
+      studentId: r.studentId,
+      author: r.author,
+      ai: Boolean(r.ai),
+      cardUrls: [
+        `https://lh3.googleusercontent.com/d/${d}=w500`,
+        `https://drive.google.com/thumbnail?id=${d}&sz=w500`,
+        `https://lh3.googleusercontent.com/d/${d}`
+      ],
+      fullUrls: [
+        `https://lh3.googleusercontent.com/d/${d}=w1200`,
+        `https://drive.google.com/thumbnail?id=${d}&sz=w1200`,
+        `https://lh3.googleusercontent.com/d/${d}`
+      ],
+      driveUrl: `https://drive.google.com/file/d/${d}/view`
+    };
+  });
+
+  const BY_ID = Object.fromEntries(WORKS.map((w) => [w.id, w]));
+
+  /* ===================== 유틸리티 ===================== */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const norm = (s) => String(s || '').normalize('NFC').replace(/\s+/g, '').toLowerCase();
+  const docKey = (s) => norm(s).replace(/[\/.#$\[\]]/g, '_');
+  const setVisible = (el, visible) => {
+    if (el) el.classList.toggle('hidden', !visible);
+  };
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    setVisible(t, true);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => setVisible(t, false), 2200);
+  }
+
+  function dialog({ title, message, confirmText = '확인', cancel = false }) {
+    return new Promise((resolve) => {
+      $('dlgTitle').textContent = title;
+      $('dlgMsg').innerHTML = message;
+      $('dlgOk').textContent = confirmText;
+      setVisible($('dlgCancel'), cancel);
+      setVisible($('dialog'), true);
+
+      const cleanup = (result) => {
+        setVisible($('dialog'), false);
+        $('dlgOk').onclick = null;
+        $('dlgCancel').onclick = null;
+        resolve(result);
+      };
+
+      $('dlgOk').onclick = () => cleanup(true);
+      $('dlgCancel').onclick = () => cleanup(false);
+    });
+  }
+
+  /* ===================== 상태 및 저장소 ===================== */
+  const state = {
+    view: 'intro',
+    name: '',
+    voted: false,
+    prevChoices: [],
+    selected: new Set(),
+    filter: 'ALL',
+    votes: [],
+    admin: false,
+    reveal: false,
+    cur: 0,
+    lbIndex: -1
+  };
+
+  function readVotes() {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : Object.values(parsed);
+    } catch (e) {
+      console.error('투표 데이터 읽기 오류:', e);
+      return [];
+    }
+  }
+
+  function writeVotes(mapObj) {
+    try {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(mapObj));
+    } catch (e) {
+      console.error('투표 데이터 저장 오류:', e);
+      throw e;
+    }
+  }
+
+  function saveSession() {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        name: state.name,
+        sel: Array.from(state.selected)
+      }));
+    } catch (e) { /* 무시 */ }
+  }
+
+  function loadSession() {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (obj && obj.name) {
+        state.name = obj.name;
+        if (Array.isArray(obj.sel)) {
+          obj.sel.forEach((id) => {
+            if (BY_ID[id]) state.selected.add(id);
+          });
+        }
+      }
+    } catch (e) { /* 무시 */ }
+  }
+
+  /* ===================== 집계 로직 ===================== */
+  function tally() {
+    const counts = Object.fromEntries(WORKS.map((w) => [w.id, 0]));
+    let total = 0;
+
+    state.votes.forEach((v) => {
+      (v.choices || []).forEach((id) => {
+        if (Object.prototype.hasOwnProperty.call(counts, id)) {
+          counts[id] += 1;
+          total += 1;
+        }
+      });
+    });
+
+    const ranked = WORKS
+      .map((w) => ({
+        ...w,
+        votes: counts[w.id],
+        rate: total > 0 ? (counts[w.id] / total) * 100 : 0
+      }))
+      .sort((a, b) => b.votes - a.votes || a.no.localeCompare(b.no));
+
+    let prev = null;
+    let rank = 0;
+    ranked.forEach((r, idx) => {
+      if (r.votes !== prev) {
+        rank = idx + 1;
+        prev = r.votes;
+      }
+      r.rank = rank;
+    });
+
+    return { ranked, total, voters: state.votes.length };
+  }
+
+  /* ===================== 화면 전환 ===================== */
+  function go(view) {
+    state.view = view;
+    setVisible($('intro'), view === 'intro');
+    setVisible($('viewer'), view === 'viewer');
+    setVisible($('pages'), view === 'live' || view === 'admin');
+    setVisible($('pane-live'), view === 'live');
+    setVisible($('pane-admin'), view === 'admin');
+    setVisible($('gridView'), false);
+
+    if (view === 'viewer') {
+      requestAnimationFrame(() => {
+        goTo(state.cur, false);
+        updateViewer();
+      });
+    } else if (view === 'live') {
+      renderLive();
+    } else if (view === 'admin') {
+      renderAdmin();
+    }
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === view);
+    });
+
+    if (view === 'live' || view === 'admin') {
+      $('pages').scrollTop = 0;
+    }
+  }
+
+  /* ===================== 이름 인증 및 본인 작품 판별 ===================== */
+  const isMine = (w) => Boolean(state.name) && norm(w.author) === norm(state.name);
+
+  function syncVoter() {
+    state.votes = readVotes();
+    if (!state.name) {
+      state.voted = false;
+      state.prevChoices = [];
+    } else {
+      const key = docKey(state.name);
+      const found = state.votes.find((v) => v.key === key || docKey(v.name) === key);
+      state.voted = Boolean(found);
+      state.prevChoices = found ? (found.choices || []) : [];
+      if (state.voted) state.selected.clear();
+    }
+    renderIntroNote();
+    updateViewer();
+    updateGrid();
+    saveSession();
+  }
+
+  function renderIntroNote() {
+    const note = $('nameNote');
+    const btn = $('nameBtn');
+    if (!state.name) {
+      setVisible(note, false);
+      btn.textContent = '시작하기';
+      return;
+    }
+
+    const mineCount = WORKS.filter(isMine).length;
+    if (state.voted) {
+      note.textContent = `${state.name} 님은 이미 투표를 완료했습니다. 작품 감상만 가능합니다.`;
+      btn.textContent = '작품 감상하기';
+    } else if (mineCount > 0) {
+      note.textContent = `${state.name} 님의 출품작(${mineCount}점)은 자동으로 투표에서 제외됩니다.`;
+      btn.textContent = '투표 계속하기';
+    } else {
+      note.textContent = `${state.name} 님은 출품자 명단에 없어 전체 작품에 투표할 수 있습니다.`;
+      btn.textContent = '투표 계속하기';
+    }
+    setVisible(note, true);
+  }
+
+  /* ===================== 선택 상태 및 뷰어 업데이트 ===================== */
+  function getPickState(w) {
+    if (!state.name) return { kind: 'noname', label: '이름을 먼저 입력하세요', disabled: true };
+    if (isMine(w)) return { kind: 'self', label: '본인 출품작 (투표 불가)', disabled: true };
+    if (state.voted) {
+      return state.prevChoices.includes(w.id)
+        ? { kind: 'mine', label: '내가 투표한 작품', disabled: true }
+        : { kind: 'closed', label: '투표 완료됨', disabled: true };
+    }
+    if (state.selected.has(w.id)) return { kind: 'on', label: '선택됨 (누르면 취소)', disabled: false };
+    return { kind: 'off', label: '이 작품 선택', disabled: false };
+  }
+
+  function togglePick(id) {
+    const w = BY_ID[id];
+    if (!w) return;
+    const ps = getPickState(w);
+    if (ps.kind === 'noname') { go('intro'); return; }
+    if (ps.kind === 'self') { toast('본인 출품작에는 투표할 수 없습니다.'); return; }
+    if (ps.disabled) return;
+
+    if (state.selected.has(id)) {
+      state.selected.delete(id);
+    } else {
+      if (state.selected.size >= MAX_VOTES) {
+        toast('3점을 모두 선택했습니다. 기존 선택을 취소한 후 골라주세요.');
+        return;
+      }
+      state.selected.add(id);
+    }
+    saveSession();
+    updateViewer();
+    updateGrid();
+  }
+
+  const track = $('track');
+
+  function buildViewer() {
+    track.innerHTML = WORKS.map((w) => `
+      <div class="slide" data-slide="${w.id}">
+        <img
+          data-wid="${w.id}"
+          data-set="full"
+          data-ctx="slide"
+          data-stage="0"
+          alt="출품작"
+          decoding="async"
+          referrerpolicy="no-referrer"
+        />
+        <div class="slide-lock hidden">본인 출품작 · 투표 불가</div>
+        <div class="slide-broken hidden">
+          <p>미리보기 이미지를 불러오지 못했습니다.</p>
+          <a href="${w.driveUrl}" target="_blank" rel="noopener noreferrer">드라이브 원본 열기</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function loadAround(idx) {
+    for (let j = idx - 1; j <= idx + 2; j++) {
+      if (j < 0 || j >= WORKS.length) continue;
+      const slide = track.children[j];
+      if (!slide) continue;
+      const img = slide.querySelector('img');
+      if (img && !img.getAttribute('src') && !img.dataset.failed) {
+        img.src = WORKS[j].fullUrls[0];
+      }
+    }
+  }
+
+  function goTo(idx, smooth) {
+    state.cur = Math.max(0, Math.min(WORKS.length - 1, idx));
+    loadAround(state.cur);
+    if (track.clientWidth > 0) {
+      track.scrollTo({
+        left: state.cur * track.clientWidth,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+  }
+
+  function updateViewer() {
+    const w = WORKS[state.cur];
+    if (!w) return;
+
+    // 상단 가로 진행바
+    const pct = WORKS.length > 1 ? ((state.cur + 1) / WORKS.length) * 100 : 100;
+    $('vProgress').style.width = `${pct}%`;
+
+    // AI 여부 뱃지 (숫자 없음)
+    const aiBadge = $('vAi');
+    aiBadge.textContent = w.ai ? 'AI 활용함' : 'AI 미활용';
+    aiBadge.classList.toggle('is-ai', w.ai);
+
+    // 하단 3칸 세그먼트 바 (숫자 없음)
+    const count = state.voted ? state.prevChoices.length : state.selected.size;
+    const segs = $('vSelSegs').children;
+    for (let i = 0; i < MAX_VOTES; i++) {
+      const seg = segs[i];
+      if (!seg) continue;
+      seg.classList.remove('filled', 'voted');
+      if (i < count) {
+        seg.classList.add(state.voted ? 'voted' : 'filled');
+      }
+    }
+
+    // 선택 버튼 상태
+    const ps = getPickState(w);
+    const pickBtn = $('vPick');
+    pickBtn.textContent = ps.label;
+    pickBtn.disabled = ps.disabled;
+    pickBtn.className = '';
+    if (ps.kind === 'on') pickBtn.classList.add('state-on');
+    else if (ps.kind === 'self') pickBtn.classList.add('state-self');
+    else if (ps.kind === 'mine') pickBtn.classList.add('state-mine');
+    else if (ps.kind === 'closed') pickBtn.classList.add('state-closed');
+
+    // 제출 버튼
+    const subBtn = $('vSubmit');
+    subBtn.disabled = state.voted || !state.name || state.selected.size !== MAX_VOTES;
+    subBtn.textContent = state.voted ? '제출 완료' : '제출';
+
+    // 슬라이드별 본인 출품작 잠금 표시
+    Array.from(track.children).forEach((slide) => {
+      const work = BY_ID[slide.dataset.slide];
+      const mine = work ? isMine(work) : false;
+      slide.classList.toggle('is-mine', mine);
+      const lockEl = slide.querySelector('.slide-lock');
+      setVisible(lockEl, mine);
+    });
+  }
+
+  /* ===================== 전체 보기 그리드 ===================== */
+  function buildGrid() {
+    $('gridList').innerHTML = WORKS.map((w) => `
+      <button type="button" class="grid-tile" data-jump="${w.id}" aria-label="작품 보기">
+        <img
+          src="${w.cardUrls[0]}"
+          data-wid="${w.id}"
+          data-set="card"
+          data-stage="0"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerpolicy="no-referrer"
+        />
+        ${w.ai ? '<span class="tile-ai">AI</span>' : ''}
+        <span class="tile-mark hidden"></span>
+        <span class="tile-ring hidden"></span>
+        <span class="tile-dim hidden"></span>
+      </button>
+    `).join('');
+  }
+
+  function updateGrid() {
+    let shown = 0;
+    const tiles = $('gridList').children;
+
+    WORKS.forEach((w, i) => {
+      const tile = tiles[i];
+      if (!tile) return;
+
+      const sel = state.selected.has(w.id);
+      const mine = state.voted && state.prevChoices.includes(w.id);
+      const self = isMine(w);
+
+      let visible = true;
+      if (state.filter === 'NOAI') visible = !w.ai;
+      else if (state.filter === 'AI') visible = w.ai;
+      else if (state.filter === 'SEL') visible = sel || mine;
+
+      setVisible(tile, visible);
+      if (visible) shown += 1;
+
+      setVisible(tile.querySelector('.tile-ring'), sel || mine);
+      setVisible(tile.querySelector('.tile-dim'), self);
+
+      const mark = tile.querySelector('.tile-mark');
+      if (self) {
+        mark.textContent = '본인';
+        mark.className = 'tile-mark self';
+      } else if (sel) {
+        mark.textContent = '선택';
+        mark.className = 'tile-mark sel';
+      } else if (mine) {
+        mark.textContent = '투표';
+        mark.className = 'tile-mark mine';
+      } else {
+        mark.className = 'tile-mark hidden';
+      }
+    });
+
+    setVisible($('gridEmpty'), shown === 0);
+  }
+
+  /* ===================== 실시간 현황 & 관리자 ===================== */
+  function renderBarRow(r, maxVotes) {
+    const pct = r.votes > 0 ? Math.max(3, Math.round((r.votes / maxVotes) * 100)) : 0;
+    return `
+      <button type="button" class="rank-row" data-zoom="${r.id}">
+        <span class="rank-pos ${r.votes > 0 && r.rank <= 3 ? 'top3' : ''}">
+          ${r.votes > 0 ? String(r.rank).padStart(2, '0') : '—'}
+        </span>
+        <span class="rank-thumb">
+          <img src="${r.cardUrls[0]}" data-wid="${r.id}" data-set="card" data-stage="0" alt="" loading="lazy" referrerpolicy="no-referrer" />
+        </span>
+        <span class="rank-info">
+          <span class="rank-meta">
+            <span>No. ${r.no}${r.ai ? ' <span style="color:var(--accent);font-size:11px;">AI</span>' : ''}</span>
+            <span>${r.votes}표 <span style="color:var(--ink-muted);font-weight:400;font-size:11px;">(${r.rate.toFixed(1)}%)</span></span>
+          </span>
+          <span class="rank-bar-bg">
+            <span class="rank-bar-fill ${r.ai ? 'is-ai' : ''}" style="width:${pct}%"></span>
+          </span>
+        </span>
+      </button>
+    `;
+  }
+
+  function renderLive() {
+    const { ranked, total, voters } = tally();
+    $('statVoters').textContent = voters;
+    $('statVotes').textContent = total;
+    $('statWorks').textContent = WORKS.length;
+
+    const noAiTop = ranked.filter((r) => !r.ai).slice(0, 3);
+    const aiTop = ranked.filter((r) => r.ai).slice(0, 3);
+    const getMax = (arr) => Math.max(1, ...arr.map((x) => x.votes));
+
+    $('topNoAi').innerHTML = noAiTop.length
+      ? noAiTop.map((r) => renderBarRow(r, getMax(noAiTop))).join('')
+      : '<p style="font-size:12px;color:var(--ink-muted);padding:16px 0;">집계된 작품이 없습니다.</p>';
+
+    $('topAi').innerHTML = aiTop.length
+      ? aiTop.map((r) => renderBarRow(r, getMax(aiTop))).join('')
+      : '<p style="font-size:12px;color:var(--ink-muted);padding:16px 0;">집계된 작품이 없습니다.</p>';
+
+    const maxAll = Math.max(1, ranked[0] ? ranked[0].votes : 1);
+    $('rankAll').innerHTML = ranked.map((r) => renderBarRow(r, maxAll)).join('');
+  }
+
+  function renderAdmin() {
+    setVisible($('adminLogin'), !state.admin);
+    setVisible($('adminPanel'), state.admin);
+    if (!state.admin) return;
+
+    $('revealBtn').textContent = state.reveal ? '출품자 정보 숨기기' : '출품자 실명 · 학번 공개';
+    setVisible($('revealBox'), state.reveal);
+
+    if (state.reveal) {
+      const { ranked } = tally();
+      $('revealBody').innerHTML = [...ranked]
+        .sort((a, b) => a.no.localeCompare(b.no))
+        .map((r) => `
+          <tr>
+            <td><strong>No. ${r.no}</strong></td>
+            <td>${esc(r.author)}</td>
+            <td style="color:var(--ink-muted);">${esc(r.studentId)}</td>
+            <td style="color:${r.ai ? 'var(--accent)' : 'var(--ink-muted)'};">${r.ai ? 'AI 활용함' : 'AI 미활용'}</td>
+            <td style="text-align:right;font-weight:700;">${r.votes}표</td>
+          </tr>
+        `).join('');
+    }
+  }
+
+  /* ===================== 라이트박스 ===================== */
+  function openLightbox(id) {
+    state.lbIndex = WORKS.findIndex((w) => w.id === id);
+    if (state.lbIndex < 0) return;
+    setVisible($('lightbox'), true);
+    renderLightbox();
+  }
+
+  function closeLightbox() {
+    state.lbIndex = -1;
+    setVisible($('lightbox'), false);
+  }
+
+  function stepLightbox(delta) {
+    state.lbIndex = (state.lbIndex + delta + WORKS.length) % WORKS.length;
+    renderLightbox();
+  }
+
+  function renderLightbox() {
+    const w = WORKS[state.lbIndex];
+    if (!w) return;
+    $('lbNo').textContent = `No. ${w.no}`;
+    $('lbAi').textContent = w.ai ? 'AI 활용함' : 'AI 미활용';
+
+    const au = $('lbAuthor');
+    if (state.admin && state.reveal) {
+      au.textContent = `· ${w.author} (${w.studentId})`;
+      setVisible(au, true);
+    } else {
+      setVisible(au, false);
+    }
+
+    const img = $('lbImg');
+    setVisible($('lbBroken'), false);
+    img.classList.remove('hidden');
+    img.dataset.wid = w.id;
+    img.dataset.set = 'full';
+    img.dataset.ctx = 'lb';
+    img.dataset.stage = '0';
+    delete img.dataset.failed;
+    img.src = w.fullUrls[0];
+  }
+
+  /* ===================== 이벤트 바인딩 ===================== */
+  // 시작 화면 내비게이션
+  $('introLive').addEventListener('click', () => go('live'));
+  $('introAdmin').addEventListener('click', () => go('admin'));
+
+  // 이름 제출 폼
+  $('nameForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const val = $('nameInput').value.trim();
+    if (val.length < 2 || /^\d+$/.test(val)) {
+      await dialog({
+        title: '이름을 확인해 주세요',
+        message: '학번이 아닌 실명을 2글자 이상 입력해 주세요.'
+      });
+      return;
+    }
+    if (norm(val) !== norm(state.name)) {
+      state.selected.clear();
+    }
+    state.name = val;
+    syncVoter();
+    toast('좌우로 밀어서 작품을 넘길 수 있습니다.');
+    go('viewer');
+  });
+
+  // 뷰어 상단/하단 컨트롤
+  $('vHome').addEventListener('click', () => go('intro'));
+  $('vLive').addEventListener('click', () => go('live'));
+  $('vGrid').addEventListener('click', () => {
+    updateGrid();
+    setVisible($('gridView'), true);
+  });
+  $('vPick').addEventListener('click', () => togglePick(WORKS[state.cur].id));
+  $('vPrev').addEventListener('click', () => goTo(state.cur - 1, true));
+  $('vNext').addEventListener('click', () => goTo(state.cur + 1, true));
+
+  // 스와이프 스크롤 감지
+  let scrollRaf = 0;
+  track.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      if (!track.clientWidth) return;
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      if (idx !== state.cur && idx >= 0 && idx < WORKS.length) {
+        state.cur = idx;
+        loadAround(idx);
+        updateViewer();
+      }
+    });
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    if (state.view === 'viewer') goTo(state.cur, false);
+  });
+
+  // 투표 최종 제출
+  $('vSubmit').addEventListener('click', async () => {
+    if (!state.name || state.voted || state.selected.size !== MAX_VOTES) return;
+    const chosen = Array.from(state.selected)
+      .map((id) => BY_ID[id])
+      .filter(Boolean)
+      .sort((a, b) => a.no.localeCompare(b.no));
+
+    if (chosen.some(isMine)) {
+      await dialog({ title: '제출 불가', message: '본인 출품작이 포함되어 있습니다.' });
+      return;
+    }
+
+    const ok = await dialog({
+      title: '투표를 제출할까요?',
+      message: `<strong>${esc(state.name)}</strong> 님이 선택한 3점의 투표를 확정합니다.<br/>제출 후에는 수정하거나 다시 투표할 수 없습니다.`,
+      confirmText: '제출하기',
+      cancel: true
+    });
+    if (!ok) return;
+
+    const mapObj = {};
+    readVotes().forEach((v) => { mapObj[v.key] = v; });
+    const key = docKey(state.name);
+
+    if (mapObj[key]) {
+      await dialog({ title: '이미 투표했습니다', message: '같은 이름으로 이미 투표 기록이 존재합니다.' });
+      syncVoter();
+      return;
+    }
+
+    mapObj[key] = {
+      name: state.name,
+      key,
+      choices: chosen.map((w) => w.id),
+      at: Date.now()
+    };
+    writeVotes(mapObj);
+    syncVoter();
+
+    await dialog({
+      title: '투표가 완료되었습니다',
+      message: '참여해 주셔서 감사합니다. 실시간 현황에서 결과를 확인할 수 있습니다.'
+    });
+  });
+
+  // 전체 보기 그리드 컨트롤
+  $('gridClose').addEventListener('click', () => setVisible($('gridView'), false));
+  document.querySelectorAll('.filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.filter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      updateGrid();
+    });
+  });
+
+  $('gridList').addEventListener('click', (e) => {
+    const tile = e.target.closest('[data-jump]');
+    if (!tile) return;
+    const idx = WORKS.findIndex((w) => w.id === tile.dataset.jump);
+    if (idx >= 0) {
+      setVisible($('gridView'), false);
+      goTo(idx, false);
+      updateViewer();
+    }
+  });
+
+  // 현황/관리자 탭 및 이동
+  $('pagesBack').addEventListener('click', () => go(state.name ? 'viewer' : 'intro'));
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => go(btn.dataset.tab));
+  });
+
+  $('pane-live').addEventListener('click', (e) => {
+    const row = e.target.closest('[data-zoom]');
+    if (row) openLightbox(row.dataset.zoom);
+  });
+
+  // 관리자 기능
+  $('adminForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if ($('adminPw').value === ADMIN_PASSWORD) {
+      state.admin = true;
+      $('adminPw').value = '';
+      renderAdmin();
+    } else {
+      await dialog({ title: '비밀번호 오류', message: '관리자 비밀번호가 일치하지 않습니다.' });
+    }
+  });
+
+  $('logoutBtn').addEventListener('click', () => {
+    state.admin = false;
+    state.reveal = false;
+    renderAdmin();
+  });
+
+  $('revealBtn').addEventListener('click', () => {
+    state.reveal = !state.reveal;
+    renderAdmin();
+  });
+
+  $('csvBtn').addEventListener('click', () => {
+    if (!state.admin) return;
+    const { ranked, total } = tally();
+    const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    const head = ['순위', '작품번호', '출품자', '학번', 'AI활용여부', '득표수', '득표율(%)'];
+    const rows = ranked.map((r) => [
+      r.votes > 0 ? r.rank : '-',
+      'No. ' + r.no,
+      r.author,
+      r.studentId,
+      r.ai ? 'AI 활용함' : 'AI 미활용',
+      r.votes,
+      r.rate.toFixed(1)
+    ].map(q).join(','));
+
+    const csv = '\uFEFF' + [head.map(q).join(','), ...rows].join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `다담_가을사진공모전_투표결과_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`CSV 파일이 저장되었습니다. (총 ${total}표)`);
+  });
+
+  $('resetBtn').addEventListener('click', async () => {
+    if (!state.admin) return;
+    const ok = await dialog({
+      title: '투표 데이터를 초기화할까요?',
+      message: '저장된 모든 투표 기록이 삭제되며 되돌릴 수 없습니다.',
+      confirmText: '전체 초기화',
+      cancel: true
+    });
+    if (!ok) return;
+    writeVotes({});
+    state.selected.clear();
+    syncVoter();
+    renderLive();
+    renderAdmin();
+    toast('투표 데이터가 초기화되었습니다.');
+  });
+
+  // 라이트박스 컨트롤
+  $('lbClose').addEventListener('click', closeLightbox);
+  $('lbPrev').addEventListener('click', () => stepLightbox(-1));
+  $('lbNext').addEventListener('click', () => stepLightbox(1));
+
+  // 키보드 단축키
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (state.lbIndex >= 0) closeLightbox();
+      else if (!$('gridView').classList.contains('hidden')) setVisible($('gridView'), false);
+      return;
+    }
+    if (state.view === 'viewer' && $('gridView').classList.contains('hidden')) {
+      if (e.key === 'ArrowLeft') goTo(state.cur - 1, true);
+      else if (e.key === 'ArrowRight') goTo(state.cur + 1, true);
+    }
+    if (state.lbIndex >= 0) {
+      if (e.key === 'ArrowLeft') stepLightbox(-1);
+      else if (e.key === 'ArrowRight') stepLightbox(1);
+    }
+  });
+
+  // 이미지 로드 실패 시 다중 폴백 처리
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG') return;
+    const w = BY_ID[img.dataset.wid];
+    if (!w) return;
+
+    const urls = img.dataset.set === 'full' ? w.fullUrls : w.cardUrls;
+    const next = parseInt(img.dataset.stage || '0', 10) + 1;
+    if (next < urls.length) {
+      img.dataset.stage = String(next);
+      img.src = urls[next];
+      return;
+    }
+
+    img.dataset.failed = '1';
+    img.classList.add('hidden');
+    if (img.dataset.ctx === 'lb') {
+      setVisible($('lbBroken'), true);
+      $('lbDrive').href = w.driveUrl;
+    } else if (img.dataset.ctx === 'slide') {
+      const brokenEl = img.parentElement ? img.parentElement.querySelector('.slide-broken') : null;
+      setVisible(brokenEl, true);
+    }
+  }, true);
+
+  // 다른 탭과 localStorage 실시간 동기화
+  window.addEventListener('storage', (e) => {
+    if (e.key === LOCAL_KEY) {
+      syncVoter();
+      if (state.view === 'live') renderLive();
+      if (state.view === 'admin') renderAdmin();
+    }
+  });
+
+  /* ===================== 초기 부팅 ===================== */
+  try {
+    loadSession();
+    if (state.name) $('nameInput').value = state.name;
+    buildViewer();
+    buildGrid();
+    syncVoter();
+    go('intro');
+  } catch (err) {
+    console.error('초기화 오류:', err);
+  }
+});
+</script>
+</body>
+</html>
