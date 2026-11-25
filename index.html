@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0e0e10" />
 <title>다담 가을 사진 공모전 현장 투표</title>
+<link rel="preconnect" href="https://lh3.googleusercontent.com" crossorigin />
+<link rel="dns-prefetch" href="https://drive.google.com" />
 <style>
   :root {
     --bg-dark: #0e0e10;
@@ -223,9 +226,12 @@
 
   .progress-fill {
     height: 100%;
-    width: 1.8%;
+    width: 100%;
     background: #ffffff;
-    transition: width 0.2s ease-out;
+    transform-origin: left center;
+    transform: scaleX(0.018);
+    transition: transform 0.2s ease-out;
+    will-change: transform;
   }
 
   .viewer-bar {
@@ -274,6 +280,8 @@
   }
 
   #track {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: flex;
@@ -282,6 +290,7 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    touch-action: pan-x;
     scrollbar-width: none;
   }
 
@@ -310,6 +319,7 @@
     object-fit: contain;
     display: block;
     user-select: none;
+    -webkit-user-drag: none;
   }
 
   .slide.is-mine img {
@@ -789,6 +799,7 @@
   }
 
   .rank-bar-bg {
+    display: block;
     height: 4px;
     background: rgba(20, 20, 19, 0.08);
     margin-top: 8px;
@@ -796,6 +807,7 @@
   }
 
   .rank-bar-fill {
+    display: block;
     height: 100%;
     background: var(--forest);
     transition: width 0.3s ease;
@@ -1005,6 +1017,10 @@
     font-weight: 600;
     white-space: nowrap;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
 </style>
 </head>
 <body>
@@ -1040,7 +1056,7 @@
           placeholder="이름을 입력하세요"
         />
         <p id="nameNote" class="intro-note hidden"></p>
-        <button id="nameBtn" type="submit" class="intro-submit">시작하기</button>
+        <button id="nameBtn" type="button" class="intro-submit">시작하기</button>
       </form>
     </div>
 
@@ -1184,7 +1200,7 @@
       <div id="adminPanel" class="hidden">
         <div class="sec-head">
           <h2>운영 및 데이터 관리</h2>
-          <span style="color: var(--forest); font-weight: 600;">로컬 저장소 동기 작동 중</span>
+          <span id="modeLabel" style="color: var(--forest); font-weight: 600;"></span>
         </div>
 
         <div class="admin-btns">
@@ -1260,6 +1276,12 @@
 <div id="toast" class="hidden"></div>
 
 <script>
+window.addEventListener('error', (ev) => {
+  if (ev.target && ev.target.tagName) return; // 이미지 로드 오류는 별도 처리
+  const t = document.getElementById('toast');
+  if (t) { t.textContent = '오류: ' + (ev.message || '알 수 없는 오류'); t.classList.remove('hidden'); }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
 
@@ -1267,6 +1289,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const MAX_VOTES = 3;
   const LOCAL_KEY = 'dadam_autumn_votes_2026_v6';
   const SESSION_KEY = 'dadam_autumn_session_2026_v6';
+
+  // Firebase Firestore로 여러 휴대폰의 투표를 하나로 모으려면 설정 객체를 넣으세요.
+  // null이면 이 기기의 localStorage에만 저장됩니다. (GitHub Pages 현장 투표에는 Firestore 필요)
+  // 예) { apiKey: '...', authDomain: '...', projectId: '...', appId: '...' }
+  const FIREBASE_CONFIG = null;
+  const FIRESTORE_COLLECTION = 'dadam_autumn_votes_2026';
 
   /* =====================================================================
    * 전체 56개 출품작 데이터 (#01 ~ #56)
@@ -1341,9 +1369,10 @@ document.addEventListener('DOMContentLoaded', () => {
       studentId: r.studentId,
       author: r.author,
       ai: Boolean(r.ai),
+      // 썸네일(그리드/순위표)은 작게, 뷰어는 화면용 크기로 불러와 데이터 사용량을 줄임
       cardUrls: [
-        `https://lh3.googleusercontent.com/d/${d}=w500`,
-        `https://drive.google.com/thumbnail?id=${d}&sz=w500`,
+        `https://lh3.googleusercontent.com/d/${d}=w360`,
+        `https://drive.google.com/thumbnail?id=${d}&sz=w360`,
         `https://lh3.googleusercontent.com/d/${d}`
       ],
       fullUrls: [
@@ -1424,13 +1453,71 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function writeVotes(mapObj) {
-    try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(mapObj));
-    } catch (e) {
-      console.error('투표 데이터 저장 오류:', e);
-      throw e;
-    }
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(mapObj));
   }
+
+  // 저장소: Firestore(공유) 또는 localStorage(이 기기)
+  const store = {
+    mode: 'local',
+    fb: null,
+
+    async init(onChange) {
+      if (!FIREBASE_CONFIG) return;
+      try {
+        const appMod = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+        const fsMod = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+        const app = appMod.initializeApp(FIREBASE_CONFIG);
+        const db = fsMod.getFirestore(app);
+        this.fb = { db, ...fsMod, col: fsMod.collection(db, FIRESTORE_COLLECTION) };
+        this.mode = 'firebase';
+        fsMod.onSnapshot(
+          this.fb.col,
+          (snap) => onChange(snap.docs.map((d) => d.data())),
+          (err) => { console.error(err); toast('실시간 연결에 문제가 있습니다.'); }
+        );
+      } catch (err) {
+        console.error('Firebase 초기화 실패, 로컬 저장으로 계속합니다.', err);
+        this.fb = null;
+        this.mode = 'local';
+      }
+    },
+
+    // 성공 true / 이미 투표함 'DUP'
+    async submit(payload) {
+      if (this.mode === 'firebase') {
+        const { db, doc, runTransaction } = this.fb;
+        const ref = doc(db, FIRESTORE_COLLECTION, payload.key);
+        return runTransaction(db, async (tx) => {
+          const snap = await tx.get(ref);
+          if (snap.exists()) return 'DUP';
+          tx.set(ref, payload);
+          return true;
+        });
+      }
+      const mapObj = {};
+      readVotes().forEach((v) => { mapObj[v.key] = v; });
+      if (mapObj[payload.key]) return 'DUP';
+      mapObj[payload.key] = payload;
+      writeVotes(mapObj);
+      return true;
+    },
+
+    async reset() {
+      if (this.mode === 'firebase') {
+        const { db, getDocs, writeBatch } = this.fb;
+        const snap = await getDocs(this.fb.col);
+        let batch = writeBatch(db);
+        let n = 0;
+        for (const d of snap.docs) {
+          batch.delete(d.ref);
+          if (++n % 400 === 0) { await batch.commit(); batch = writeBatch(db); }
+        }
+        await batch.commit();
+        return;
+      }
+      writeVotes({});
+    }
+  };
 
   function saveSession() {
     try {
@@ -1526,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMine = (w) => Boolean(state.name) && norm(w.author) === norm(state.name);
 
   function syncVoter() {
-    state.votes = readVotes();
+    if (store.mode === 'local') state.votes = readVotes();
     if (!state.name) {
       state.voted = false;
       state.prevChoices = [];
@@ -1538,9 +1625,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.voted) state.selected.clear();
     }
     renderIntroNote();
+    updateLocks();
     updateViewer();
     updateGrid();
     saveSession();
+  }
+
+  // 실시간(Firestore) 또는 다른 탭의 변경을 반영
+  let lastSig = '';
+  function applyVotes(list) {
+    const sig = JSON.stringify(list.map((v) => [v.key, v.choices]));
+    if (sig === lastSig) return;
+    lastSig = sig;
+    state.votes = list;
+    syncVoter();
+    if (state.view === 'live') renderLive();
+    if (state.view === 'admin') renderAdmin();
   }
 
   function renderIntroNote() {
@@ -1624,6 +1724,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   }
 
+  // 현재 작품 앞뒤만 미리 불러와 첫 화면과 데이터 사용량을 줄임
   function loadAround(idx) {
     for (let j = idx - 1; j <= idx + 2; j++) {
       if (j < 0 || j >= WORKS.length) continue;
@@ -1631,6 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!slide) continue;
       const img = slide.querySelector('img');
       if (img && !img.getAttribute('src') && !img.dataset.failed) {
+        if (j === idx) img.setAttribute('fetchpriority', 'high');
         img.src = WORKS[j].fullUrls[0];
       }
     }
@@ -1647,13 +1749,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 본인 출품작 잠금 표시는 이름/투표 상태가 바뀔 때만 갱신 (스와이프마다 갱신하지 않음)
+  function updateLocks() {
+    Array.from(track.children).forEach((slide) => {
+      const work = BY_ID[slide.dataset.slide];
+      const mine = work ? isMine(work) : false;
+      slide.classList.toggle('is-mine', mine);
+      setVisible(slide.querySelector('.slide-lock'), mine);
+    });
+  }
+
   function updateViewer() {
     const w = WORKS[state.cur];
     if (!w) return;
 
-    // 상단 가로 진행바
-    const pct = WORKS.length > 1 ? ((state.cur + 1) / WORKS.length) * 100 : 100;
-    $('vProgress').style.width = `${pct}%`;
+    // 상단 가로 진행바 (transform 사용으로 레이아웃 재계산 방지)
+    const ratio = WORKS.length > 1 ? (state.cur + 1) / WORKS.length : 1;
+    $('vProgress').style.transform = `scaleX(${ratio})`;
 
     // AI 여부 뱃지 (숫자 없음)
     const aiBadge = $('vAi');
@@ -1685,17 +1797,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 제출 버튼
     const subBtn = $('vSubmit');
-    subBtn.disabled = state.voted || !state.name || state.selected.size !== MAX_VOTES;
+    subBtn.disabled = submitting || state.voted || !state.name || state.selected.size !== MAX_VOTES;
     subBtn.textContent = state.voted ? '제출 완료' : '제출';
-
-    // 슬라이드별 본인 출품작 잠금 표시
-    Array.from(track.children).forEach((slide) => {
-      const work = BY_ID[slide.dataset.slide];
-      const mine = work ? isMine(work) : false;
-      slide.classList.toggle('is-mine', mine);
-      const lockEl = slide.querySelector('.slide-lock');
-      setVisible(lockEl, mine);
-    });
   }
 
   /* ===================== 전체 보기 그리드 ===================== */
@@ -1770,7 +1873,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${r.votes > 0 ? String(r.rank).padStart(2, '0') : '—'}
         </span>
         <span class="rank-thumb">
-          <img src="${r.cardUrls[0]}" data-wid="${r.id}" data-set="card" data-stage="0" alt="" loading="lazy" referrerpolicy="no-referrer" />
+          <img src="${r.cardUrls[0]}" data-wid="${r.id}" data-set="card" data-stage="0" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
         </span>
         <span class="rank-info">
           <span class="rank-meta">
@@ -1794,14 +1897,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const noAiTop = ranked.filter((r) => !r.ai).slice(0, 3);
     const aiTop = ranked.filter((r) => r.ai).slice(0, 3);
     const getMax = (arr) => Math.max(1, ...arr.map((x) => x.votes));
+    const emptyMsg = '<p style="font-size:12px;color:var(--ink-muted);padding:16px 0;">집계된 작품이 없습니다.</p>';
 
     $('topNoAi').innerHTML = noAiTop.length
       ? noAiTop.map((r) => renderBarRow(r, getMax(noAiTop))).join('')
-      : '<p style="font-size:12px;color:var(--ink-muted);padding:16px 0;">집계된 작품이 없습니다.</p>';
+      : emptyMsg;
 
     $('topAi').innerHTML = aiTop.length
       ? aiTop.map((r) => renderBarRow(r, getMax(aiTop))).join('')
-      : '<p style="font-size:12px;color:var(--ink-muted);padding:16px 0;">집계된 작품이 없습니다.</p>';
+      : emptyMsg;
 
     const maxAll = Math.max(1, ranked[0] ? ranked[0].votes : 1);
     $('rankAll').innerHTML = ranked.map((r) => renderBarRow(r, maxAll)).join('');
@@ -1812,6 +1916,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setVisible($('adminPanel'), state.admin);
     if (!state.admin) return;
 
+    $('modeLabel').textContent = store.mode === 'firebase' ? '저장: Firebase Firestore (실시간 공유)' : '저장: 이 기기 localStorage';
     $('revealBtn').textContent = state.reveal ? '출품자 정보 숨기기' : '출품자 실명 · 학번 공개';
     setVisible($('revealBox'), state.reveal);
 
@@ -1879,9 +1984,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('introLive').addEventListener('click', () => go('live'));
   $('introAdmin').addEventListener('click', () => go('admin'));
 
-  // 이름 제출 폼
-  $('nameForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // 이름 제출 (버튼 클릭 또는 엔터)
+  async function startVoting() {
     const val = $('nameInput').value.trim();
     if (val.length < 2 || /^\d+$/.test(val)) {
       await dialog({
@@ -1890,14 +1994,19 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       return;
     }
-    if (norm(val) !== norm(state.name)) {
-      state.selected.clear();
+    try {
+      if (norm(val) !== norm(state.name)) state.selected.clear();
+      state.name = val;
+      syncVoter();
+    } catch (err) {
+      console.error('시작 처리 오류:', err);
     }
-    state.name = val;
-    syncVoter();
-    toast('좌우로 밀어서 작품을 넘길 수 있습니다.');
+    // 위 단계에서 오류가 나도 화면은 반드시 넘어감
     go('viewer');
-  });
+    toast('좌우로 밀어서 작품을 넘길 수 있습니다.');
+  }
+  $('nameForm').addEventListener('submit', (e) => { e.preventDefault(); startVoting(); });
+  $('nameBtn').addEventListener('click', (e) => { e.preventDefault(); startVoting(); });
 
   // 뷰어 상단/하단 컨트롤
   $('vHome').addEventListener('click', () => go('intro'));
@@ -1931,8 +2040,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 투표 최종 제출
+  let submitting = false;
   $('vSubmit').addEventListener('click', async () => {
-    if (!state.name || state.voted || state.selected.size !== MAX_VOTES) return;
+    if (submitting || !state.name || state.voted || state.selected.size !== MAX_VOTES) return;
     const chosen = Array.from(state.selected)
       .map((id) => BY_ID[id])
       .filter(Boolean)
@@ -1951,29 +2061,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (!ok) return;
 
-    const mapObj = {};
-    readVotes().forEach((v) => { mapObj[v.key] = v; });
-    const key = docKey(state.name);
+    submitting = true;
+    updateViewer();
 
-    if (mapObj[key]) {
-      await dialog({ title: '이미 투표했습니다', message: '같은 이름으로 이미 투표 기록이 존재합니다.' });
-      syncVoter();
-      return;
-    }
-
-    mapObj[key] = {
+    const payload = {
       name: state.name,
-      key,
+      key: docKey(state.name),
       choices: chosen.map((w) => w.id),
       at: Date.now()
     };
-    writeVotes(mapObj);
-    syncVoter();
 
-    await dialog({
-      title: '투표가 완료되었습니다',
-      message: '참여해 주셔서 감사합니다. 실시간 현황에서 결과를 확인할 수 있습니다.'
-    });
+    try {
+      const res = await store.submit(payload);
+      if (res === 'DUP') {
+        syncVoter();
+        await dialog({ title: '이미 투표했습니다', message: '같은 이름으로 이미 투표 기록이 존재합니다.' });
+      } else {
+        // 실시간 수신 지연과 무관하게 즉시 완료 상태로 전환
+        if (!state.votes.some((v) => v.key === payload.key)) state.votes = [...state.votes, payload];
+        syncVoter();
+        await dialog({
+          title: '투표가 완료되었습니다',
+          message: '참여해 주셔서 감사합니다. 실시간 현황에서 결과를 확인할 수 있습니다.'
+        });
+      }
+    } catch (err) {
+      console.error('투표 저장 오류:', err);
+      await dialog({
+        title: '저장에 실패했습니다',
+        message: '브라우저의 저장 공간 또는 네트워크 상태를 확인한 뒤 다시 시도해 주세요.'
+      });
+    } finally {
+      submitting = false;
+      updateViewer();
+    }
   });
 
   // 전체 보기 그리드 컨트롤
@@ -2067,12 +2188,19 @@ document.addEventListener('DOMContentLoaded', () => {
       cancel: true
     });
     if (!ok) return;
-    writeVotes({});
-    state.selected.clear();
-    syncVoter();
-    renderLive();
-    renderAdmin();
-    toast('투표 데이터가 초기화되었습니다.');
+    try {
+      await store.reset();
+      state.votes = store.mode === 'local' ? readVotes() : [];
+      lastSig = '';
+      state.selected.clear();
+      syncVoter();
+      renderLive();
+      renderAdmin();
+      toast('투표 데이터가 초기화되었습니다.');
+    } catch (err) {
+      console.error('초기화 오류:', err);
+      await dialog({ title: '초기화에 실패했습니다', message: '잠시 후 다시 시도해 주세요.' });
+    }
   });
 
   // 라이트박스 컨트롤
@@ -2123,13 +2251,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, true);
 
-  // 다른 탭과 localStorage 실시간 동기화
+  // 같은 기기의 다른 탭과 localStorage 동기화
   window.addEventListener('storage', (e) => {
-    if (e.key === LOCAL_KEY) {
-      syncVoter();
-      if (state.view === 'live') renderLive();
-      if (state.view === 'admin') renderAdmin();
-    }
+    if (e.key === LOCAL_KEY && store.mode === 'local') applyVotes(readVotes());
   });
 
   /* ===================== 초기 부팅 ===================== */
@@ -2140,6 +2264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     buildGrid();
     syncVoter();
     go('intro');
+    store.init(applyVotes);
   } catch (err) {
     console.error('초기화 오류:', err);
   }
